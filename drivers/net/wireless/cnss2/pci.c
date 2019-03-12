@@ -896,6 +896,8 @@ int cnss_pci_link_down(struct device *dev)
 {
 	struct pci_dev *pci_dev = to_pci_dev(dev);
 	struct cnss_pci_data *pci_priv = cnss_get_pci_priv(pci_dev);
+	struct cnss_plat_data *plat_priv = NULL;
+
 	int ret;
 
 	if (!pci_priv) {
@@ -2455,8 +2457,10 @@ static bool cnss_pci_is_drv_supported(struct cnss_pci_data *pci_priv)
 
 static void cnss_pci_event_cb(struct msm_pcie_notify *notify)
 {
+	int ret = 0;
 	struct pci_dev *pci_dev;
 	struct cnss_pci_data *pci_priv;
+	struct cnss_plat_data *plat_priv;
 
 	if (!notify)
 		return;
@@ -2468,7 +2472,7 @@ static void cnss_pci_event_cb(struct msm_pcie_notify *notify)
 	pci_priv = cnss_get_pci_priv(pci_dev);
 	if (!pci_priv)
 		return;
-
+	plat_priv = pci_priv->plat_priv;
 	switch (notify->event) {
 	case MSM_PCIE_EVENT_LINK_RECOVER:
 		cnss_pr_dbg("PCI link recover callback\n");
