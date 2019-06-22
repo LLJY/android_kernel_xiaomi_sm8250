@@ -349,7 +349,6 @@ static int alarmtimer_suspend(struct device *dev)
 		if (min_timer) {
 			pr_info("[oem][alarm]: [%p]type=%d, func=%pf\n", min_timer, min_timer->type, min_timer->function);
 		}
-		return -EBUSY;
 	}
 
 	trace_alarmtimer_suspend(expires, type);
