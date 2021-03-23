@@ -819,7 +819,6 @@ static void gsi_handle_irq(void)
 
 	if (!gsi_ctx->per.clk_status_cb())
 		return;
-
 	type = gsi_readl(gsi_ctx->base +
 		GSI_EE_n_CNTXT_TYPE_IRQ_OFFS(ee));
 
@@ -848,6 +847,7 @@ static void gsi_handle_irq(void)
 
 	if (type & GSI_EE_n_CNTXT_TYPE_IRQ_GENERAL_BMSK)
 		gsi_handle_general(ee);
+
 }
 
 static irqreturn_t gsi_isr(int irq, void *ctxt)
