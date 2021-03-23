@@ -598,7 +598,7 @@ int f2fs_try_convert_inline_dir(struct inode *dir, struct dentry *dentry)
 	if (!err)
 		f2fs_put_page(ipage, 1);
 out_fname:
-	f2fs_free_filename(&fname);
+	fscrypt_free_filename(&fname);
 out:
 	f2fs_unlock_op(sbi);
 	return err;
