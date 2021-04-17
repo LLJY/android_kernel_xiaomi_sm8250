@@ -9,7 +9,12 @@ struct multicore_worker __percpu *
 wg_packet_percpu_multicore_worker_alloc(work_func_t function, void *ptr)
 {
 	int cpu;
+<<<<<<< HEAD
 	struct multicore_worker __percpu *worker = alloc_percpu(struct multicore_worker);
+=======
+	struct multicore_worker __percpu *worker =
+		alloc_percpu(struct multicore_worker);
+>>>>>>> 6b4bd1e6da38642e2ffffe2271694dd61a8c6e9d
 
 	if (!worker)
 		return NULL;
@@ -22,7 +27,11 @@ wg_packet_percpu_multicore_worker_alloc(work_func_t function, void *ptr)
 }
 
 int wg_packet_queue_init(struct crypt_queue *queue, work_func_t function,
+<<<<<<< HEAD
 			 unsigned int len)
+=======
+			 bool multicore, unsigned int len)
+>>>>>>> 6b4bd1e6da38642e2ffffe2271694dd61a8c6e9d
 {
 	int ret;
 
@@ -30,14 +39,29 @@ int wg_packet_queue_init(struct crypt_queue *queue, work_func_t function,
 	ret = ptr_ring_init(&queue->ring, len, GFP_KERNEL);
 	if (ret)
 		return ret;
+<<<<<<< HEAD
 	queue->worker = wg_packet_percpu_multicore_worker_alloc(function, queue);
 	if (!queue->worker) {
 		ptr_ring_cleanup(&queue->ring, NULL);
 		return -ENOMEM;
+=======
+	if (function) {
+		if (multicore) {
+			queue->worker = wg_packet_percpu_multicore_worker_alloc(
+				function, queue);
+			if (!queue->worker) {
+				ptr_ring_cleanup(&queue->ring, NULL);
+				return -ENOMEM;
+			}
+		} else {
+			INIT_WORK(&queue->work, function);
+		}
+>>>>>>> 6b4bd1e6da38642e2ffffe2271694dd61a8c6e9d
 	}
 	return 0;
 }
 
+<<<<<<< HEAD
 void wg_packet_queue_free(struct crypt_queue *queue)
 {
 	free_percpu(queue->worker);
@@ -105,3 +129,12 @@ struct sk_buff *wg_prev_queue_dequeue(struct prev_queue *queue)
 
 #undef NEXT
 #undef STUB
+=======
+void wg_packet_queue_free(struct crypt_queue *queue, bool multicore)
+{
+	if (multicore)
+		free_percpu(queue->worker);
+	WARN_ON(!__ptr_ring_empty(&queue->ring));
+	ptr_ring_cleanup(&queue->ring, NULL);
+}
+>>>>>>> 6b4bd1e6da38642e2ffffe2271694dd61a8c6e9d

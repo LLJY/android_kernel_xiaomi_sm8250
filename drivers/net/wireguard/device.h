@@ -27,6 +27,7 @@ struct multicore_worker {
 
 struct crypt_queue {
 	struct ptr_ring ring;
+<<<<<<< HEAD
 	struct multicore_worker __percpu *worker;
 	int last_cpu;
 };
@@ -35,6 +36,15 @@ struct prev_queue {
 	struct sk_buff *head, *tail, *peeked;
 	struct { struct sk_buff *next, *prev; } empty; // Match first 2 members of struct sk_buff.
 	atomic_t count;
+=======
+	union {
+		struct {
+			struct multicore_worker __percpu *worker;
+			int last_cpu;
+		};
+		struct work_struct work;
+	};
+>>>>>>> 6b4bd1e6da38642e2ffffe2271694dd61a8c6e9d
 };
 
 struct wg_device {

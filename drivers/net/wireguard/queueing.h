@@ -17,13 +17,21 @@ struct wg_device;
 struct wg_peer;
 struct multicore_worker;
 struct crypt_queue;
+<<<<<<< HEAD
 struct prev_queue;
+=======
+>>>>>>> 6b4bd1e6da38642e2ffffe2271694dd61a8c6e9d
 struct sk_buff;
 
 /* queueing.c APIs: */
 int wg_packet_queue_init(struct crypt_queue *queue, work_func_t function,
+<<<<<<< HEAD
 			 unsigned int len);
 void wg_packet_queue_free(struct crypt_queue *queue);
+=======
+			 bool multicore, unsigned int len);
+void wg_packet_queue_free(struct crypt_queue *queue, bool multicore);
+>>>>>>> 6b4bd1e6da38642e2ffffe2271694dd61a8c6e9d
 struct multicore_worker __percpu *
 wg_packet_percpu_multicore_worker_alloc(work_func_t function, void *ptr);
 
@@ -136,6 +144,7 @@ static inline int wg_cpumask_next_online(int *next)
 	return cpu;
 }
 
+<<<<<<< HEAD
 void wg_prev_queue_init(struct prev_queue *queue);
 
 /* Multi producer */
@@ -161,6 +170,10 @@ static inline void wg_prev_queue_drop_peeked(struct prev_queue *queue)
 
 static inline int wg_queue_enqueue_per_device_and_peer(
 	struct crypt_queue *device_queue, struct prev_queue *peer_queue,
+=======
+static inline int wg_queue_enqueue_per_device_and_peer(
+	struct crypt_queue *device_queue, struct crypt_queue *peer_queue,
+>>>>>>> 6b4bd1e6da38642e2ffffe2271694dd61a8c6e9d
 	struct sk_buff *skb, struct workqueue_struct *wq, int *next_cpu)
 {
 	int cpu;
@@ -169,9 +182,14 @@ static inline int wg_queue_enqueue_per_device_and_peer(
 	/* We first queue this up for the peer ingestion, but the consumer
 	 * will wait for the state to change to CRYPTED or DEAD before.
 	 */
+<<<<<<< HEAD
 	if (unlikely(!wg_prev_queue_enqueue(peer_queue, skb)))
 		return -ENOSPC;
 
+=======
+	if (unlikely(ptr_ring_produce_bh(&peer_queue->ring, skb)))
+		return -ENOSPC;
+>>>>>>> 6b4bd1e6da38642e2ffffe2271694dd61a8c6e9d
 	/* Then we queue it up in the device queue, which consumes the
 	 * packet as soon as it can.
 	 */
@@ -182,7 +200,13 @@ static inline int wg_queue_enqueue_per_device_and_peer(
 	return 0;
 }
 
+<<<<<<< HEAD
 static inline void wg_queue_enqueue_per_peer_tx(struct sk_buff *skb, enum packet_state state)
+=======
+static inline void wg_queue_enqueue_per_peer(struct crypt_queue *queue,
+					     struct sk_buff *skb,
+					     enum packet_state state)
+>>>>>>> 6b4bd1e6da38642e2ffffe2271694dd61a8c6e9d
 {
 	/* We take a reference, because as soon as we call atomic_set, the
 	 * peer can be freed from below us.
@@ -190,12 +214,23 @@ static inline void wg_queue_enqueue_per_peer_tx(struct sk_buff *skb, enum packet
 	struct wg_peer *peer = wg_peer_get(PACKET_PEER(skb));
 
 	atomic_set_release(&PACKET_CB(skb)->state, state);
+<<<<<<< HEAD
 	queue_work_on(wg_cpumask_choose_online(&peer->serial_work_cpu, peer->internal_id),
 		      peer->device->packet_crypt_wq, &peer->transmit_packet_work);
 	wg_peer_put(peer);
 }
 
 static inline void wg_queue_enqueue_per_peer_rx(struct sk_buff *skb, enum packet_state state)
+=======
+	queue_work_on(wg_cpumask_choose_online(&peer->serial_work_cpu,
+					       peer->internal_id),
+		      peer->device->packet_crypt_wq, &queue->work);
+	wg_peer_put(peer);
+}
+
+static inline void wg_queue_enqueue_per_peer_napi(struct sk_buff *skb,
+						  enum packet_state state)
+>>>>>>> 6b4bd1e6da38642e2ffffe2271694dd61a8c6e9d
 {
 	/* We take a reference, because as soon as we call atomic_set, the
 	 * peer can be freed from below us.

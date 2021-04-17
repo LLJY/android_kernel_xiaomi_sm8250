@@ -239,7 +239,12 @@ void wg_packet_send_keepalive(struct wg_peer *peer)
 	wg_packet_send_staged_packets(peer);
 }
 
+<<<<<<< HEAD
 static void wg_packet_create_data_done(struct wg_peer *peer, struct sk_buff *first)
+=======
+static void wg_packet_create_data_done(struct sk_buff *first,
+				       struct wg_peer *peer)
+>>>>>>> 6b4bd1e6da38642e2ffffe2271694dd61a8c6e9d
 {
 	struct sk_buff *skb, *next;
 	bool is_keepalive, data_sent = false;
@@ -261,6 +266,7 @@ static void wg_packet_create_data_done(struct wg_peer *peer, struct sk_buff *fir
 
 void wg_packet_tx_worker(struct work_struct *work)
 {
+<<<<<<< HEAD
 	struct wg_peer *peer = container_of(work, struct wg_peer, transmit_packet_work);
 	struct noise_keypair *keypair;
 	enum packet_state state;
@@ -274,6 +280,24 @@ void wg_packet_tx_worker(struct work_struct *work)
 
 		if (likely(state == PACKET_STATE_CRYPTED))
 			wg_packet_create_data_done(peer, first);
+=======
+	struct crypt_queue *queue = container_of(work, struct crypt_queue,
+						 work);
+	struct noise_keypair *keypair;
+	enum packet_state state;
+	struct sk_buff *first;
+	struct wg_peer *peer;
+
+	while ((first = __ptr_ring_peek(&queue->ring)) != NULL &&
+	       (state = atomic_read_acquire(&PACKET_CB(first)->state)) !=
+		       PACKET_STATE_UNCRYPTED) {
+		__ptr_ring_discard_one(&queue->ring);
+		peer = PACKET_PEER(first);
+		keypair = PACKET_CB(first)->keypair;
+
+		if (likely(state == PACKET_STATE_CRYPTED))
+			wg_packet_create_data_done(first, peer);
+>>>>>>> 6b4bd1e6da38642e2ffffe2271694dd61a8c6e9d
 		else
 			kfree_skb_list(first);
 
@@ -302,14 +326,25 @@ void wg_packet_encrypt_worker(struct work_struct *work)
 				break;
 			}
 		}
+<<<<<<< HEAD
 		wg_queue_enqueue_per_peer_tx(first, state);
+=======
+		wg_queue_enqueue_per_peer(&PACKET_PEER(first)->tx_queue, first,
+					  state);
+>>>>>>> 6b4bd1e6da38642e2ffffe2271694dd61a8c6e9d
 		if (need_resched())
 			cond_resched();
 	}
 }
 
+<<<<<<< HEAD
 static void wg_packet_create_data(struct wg_peer *peer, struct sk_buff *first)
 {
+=======
+static void wg_packet_create_data(struct sk_buff *first)
+{
+	struct wg_peer *peer = PACKET_PEER(first);
+>>>>>>> 6b4bd1e6da38642e2ffffe2271694dd61a8c6e9d
 	struct wg_device *wg = peer->device;
 	int ret = -EINVAL;
 
@@ -317,10 +352,20 @@ static void wg_packet_create_data(struct wg_peer *peer, struct sk_buff *first)
 	if (unlikely(READ_ONCE(peer->is_dead)))
 		goto err;
 
+<<<<<<< HEAD
 	ret = wg_queue_enqueue_per_device_and_peer(&wg->encrypt_queue, &peer->tx_queue, first,
 						   wg->packet_crypt_wq, &wg->encrypt_queue.last_cpu);
 	if (unlikely(ret == -EPIPE))
 		wg_queue_enqueue_per_peer_tx(first, PACKET_STATE_DEAD);
+=======
+	ret = wg_queue_enqueue_per_device_and_peer(&wg->encrypt_queue,
+						   &peer->tx_queue, first,
+						   wg->packet_crypt_wq,
+						   &wg->encrypt_queue.last_cpu);
+	if (unlikely(ret == -EPIPE))
+		wg_queue_enqueue_per_peer(&peer->tx_queue, first,
+					  PACKET_STATE_DEAD);
+>>>>>>> 6b4bd1e6da38642e2ffffe2271694dd61a8c6e9d
 err:
 	rcu_read_unlock_bh();
 	if (likely(!ret || ret == -EPIPE))
@@ -384,7 +429,11 @@ void wg_packet_send_staged_packets(struct wg_peer *peer)
 	packets.prev->next = NULL;
 	wg_peer_get(keypair->entry.peer);
 	PACKET_CB(packets.next)->keypair = keypair;
+<<<<<<< HEAD
 	wg_packet_create_data(peer, packets.next);
+=======
+	wg_packet_create_data(packets.next);
+>>>>>>> 6b4bd1e6da38642e2ffffe2271694dd61a8c6e9d
 	return;
 
 out_invalid:

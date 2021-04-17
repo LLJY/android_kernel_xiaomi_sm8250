@@ -444,6 +444,10 @@ packet_processed:
 int wg_packet_rx_poll(struct napi_struct *napi, int budget)
 {
 	struct wg_peer *peer = container_of(napi, struct wg_peer, napi);
+<<<<<<< HEAD
+=======
+	struct crypt_queue *queue = &peer->rx_queue;
+>>>>>>> 6b4bd1e6da38642e2ffffe2271694dd61a8c6e9d
 	struct noise_keypair *keypair;
 	struct endpoint endpoint;
 	enum packet_state state;
@@ -454,10 +458,18 @@ int wg_packet_rx_poll(struct napi_struct *napi, int budget)
 	if (unlikely(budget <= 0))
 		return 0;
 
+<<<<<<< HEAD
 	while ((skb = wg_prev_queue_peek(&peer->rx_queue)) != NULL &&
 	       (state = atomic_read_acquire(&PACKET_CB(skb)->state)) !=
 		       PACKET_STATE_UNCRYPTED) {
 		wg_prev_queue_drop_peeked(&peer->rx_queue);
+=======
+	while ((skb = __ptr_ring_peek(&queue->ring)) != NULL &&
+	       (state = atomic_read_acquire(&PACKET_CB(skb)->state)) !=
+		       PACKET_STATE_UNCRYPTED) {
+		__ptr_ring_discard_one(&queue->ring);
+		peer = PACKET_PEER(skb);
+>>>>>>> 6b4bd1e6da38642e2ffffe2271694dd61a8c6e9d
 		keypair = PACKET_CB(skb)->keypair;
 		free = true;
 
@@ -506,7 +518,11 @@ void wg_packet_decrypt_worker(struct work_struct *work)
 		enum packet_state state =
 			likely(decrypt_packet(skb, PACKET_CB(skb)->keypair)) ?
 				PACKET_STATE_CRYPTED : PACKET_STATE_DEAD;
+<<<<<<< HEAD
 		wg_queue_enqueue_per_peer_rx(skb, state);
+=======
+		wg_queue_enqueue_per_peer_napi(skb, state);
+>>>>>>> 6b4bd1e6da38642e2ffffe2271694dd61a8c6e9d
 		if (need_resched())
 			cond_resched();
 	}
@@ -529,10 +545,19 @@ static void wg_packet_consume_data(struct wg_device *wg, struct sk_buff *skb)
 	if (unlikely(READ_ONCE(peer->is_dead)))
 		goto err;
 
+<<<<<<< HEAD
 	ret = wg_queue_enqueue_per_device_and_peer(&wg->decrypt_queue, &peer->rx_queue, skb,
 						   wg->packet_crypt_wq, &wg->decrypt_queue.last_cpu);
 	if (unlikely(ret == -EPIPE))
 		wg_queue_enqueue_per_peer_rx(skb, PACKET_STATE_DEAD);
+=======
+	ret = wg_queue_enqueue_per_device_and_peer(&wg->decrypt_queue,
+						   &peer->rx_queue, skb,
+						   wg->packet_crypt_wq,
+						   &wg->decrypt_queue.last_cpu);
+	if (unlikely(ret == -EPIPE))
+		wg_queue_enqueue_per_peer_napi(skb, PACKET_STATE_DEAD);
+>>>>>>> 6b4bd1e6da38642e2ffffe2271694dd61a8c6e9d
 	if (likely(!ret || ret == -EPIPE)) {
 		rcu_read_unlock_bh();
 		return;

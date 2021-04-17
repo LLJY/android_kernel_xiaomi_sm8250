@@ -157,7 +157,11 @@ static netdev_tx_t wg_xmit(struct sk_buff *skb, struct net_device *dev)
 	} else {
 		struct sk_buff *segs = skb_gso_segment(skb, 0);
 
+<<<<<<< HEAD
 		if (IS_ERR(segs)) {
+=======
+		if (unlikely(IS_ERR(segs))) {
+>>>>>>> 6b4bd1e6da38642e2ffffe2271694dd61a8c6e9d
 			ret = PTR_ERR(segs);
 			goto err_peer;
 		}
@@ -234,8 +238,13 @@ static void wg_destruct(struct net_device *dev)
 	destroy_workqueue(wg->handshake_receive_wq);
 	destroy_workqueue(wg->handshake_send_wq);
 	destroy_workqueue(wg->packet_crypt_wq);
+<<<<<<< HEAD
 	wg_packet_queue_free(&wg->decrypt_queue);
 	wg_packet_queue_free(&wg->encrypt_queue);
+=======
+	wg_packet_queue_free(&wg->decrypt_queue, true);
+	wg_packet_queue_free(&wg->encrypt_queue, true);
+>>>>>>> 6b4bd1e6da38642e2ffffe2271694dd61a8c6e9d
 	rcu_barrier(); /* Wait for all the peers to be actually freed. */
 	wg_ratelimiter_uninit();
 	memzero_explicit(&wg->static_identity, sizeof(wg->static_identity));
@@ -336,12 +345,20 @@ static int wg_newlink(struct net *src_net, struct net_device *dev,
 		goto err_destroy_handshake_send;
 
 	ret = wg_packet_queue_init(&wg->encrypt_queue, wg_packet_encrypt_worker,
+<<<<<<< HEAD
 				   MAX_QUEUED_PACKETS);
+=======
+				   true, MAX_QUEUED_PACKETS);
+>>>>>>> 6b4bd1e6da38642e2ffffe2271694dd61a8c6e9d
 	if (ret < 0)
 		goto err_destroy_packet_crypt;
 
 	ret = wg_packet_queue_init(&wg->decrypt_queue, wg_packet_decrypt_worker,
+<<<<<<< HEAD
 				   MAX_QUEUED_PACKETS);
+=======
+				   true, MAX_QUEUED_PACKETS);
+>>>>>>> 6b4bd1e6da38642e2ffffe2271694dd61a8c6e9d
 	if (ret < 0)
 		goto err_free_encrypt_queue;
 
@@ -366,9 +383,15 @@ static int wg_newlink(struct net *src_net, struct net_device *dev,
 err_uninit_ratelimiter:
 	wg_ratelimiter_uninit();
 err_free_decrypt_queue:
+<<<<<<< HEAD
 	wg_packet_queue_free(&wg->decrypt_queue);
 err_free_encrypt_queue:
 	wg_packet_queue_free(&wg->encrypt_queue);
+=======
+	wg_packet_queue_free(&wg->decrypt_queue, true);
+err_free_encrypt_queue:
+	wg_packet_queue_free(&wg->encrypt_queue, true);
+>>>>>>> 6b4bd1e6da38642e2ffffe2271694dd61a8c6e9d
 err_destroy_packet_crypt:
 	destroy_workqueue(wg->packet_crypt_wq);
 err_destroy_handshake_send:
